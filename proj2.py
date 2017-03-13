@@ -36,6 +36,7 @@ api = tweepy.API(auth, parser=tweepy.parsers.JSONParser())
 ## Part 0 -- CACHING SETUP
 
 ## Write the cde to begin your caching pattern setup here.
+
 CACHE_FNAME = '206project2_caching.json'
 try:
 	cache_file = open(CACHE_FNAME,'r')
@@ -59,14 +60,6 @@ def find_urls(astring):
 	r = re.findall(r"https?:\/\/[A-Za-z0-9]+(?:\.+[A-Za-z0-9]+)+", astring)
 	return r
 
-
-
-
-
-
-
-
-
 ## PART 2 (a) - Define a function called get_umsi_data.
 ## INPUT: N/A. No input.
 ## The function should check if there is any cached data for the UMSI directory in your cached 
@@ -75,14 +68,31 @@ def find_urls(astring):
 #(save) that list when it is accumulated.
 ## RETURN VALUE: A list of HTML strings representing each page of the UMSI directory. 
 ## Reminder: you'll need to use the special header for a request to the UMSI site, like so:
-#### requests.get(base_url, headers={'User-Agent': 'SI_CLASS'}) 
+#requests.get(base_url, headers={'User-Agent': 'SI_CLASS'}) 
 
 ## Start with this page: https://www.si.umich.edu/directory?field_person_firstname_value=&field_person_lastname_value=&rid=All  
 ## End with this page: https://www.si.umich.edu/directory?field_person_firstname_value=&field_person_lastname_value=&rid=All&page=11 
 
 def get_umsi_data():
-	
+	base_url = "https://www.si.umich.edu/directory?field_person_firstname_value=&field_person_lastname_value=&rid=All"
+	pg_list =[]
+	#response = requests.get(base_url, headers={'User-Agent': 'SI_CLASS'}) 
+	#htmldoc = response.text
 
+	if 'umsi_directory_data' in CACHE_DICTION:
+		return CACHE_DICTION['umsi_directory_data']
+	
+	else:
+		for pg in range(0,12):
+			get_url = base_url + str(pg)
+			directory_data = requests.get(get_url, headers={'User-Agent': 'SI_CLASS'})
+			pg_list.append(directory_data.text)
+		CACHE_DICTION['umsi_directory_data'] = pg_list
+
+		cached_data = open(CACHE_FNAME, 'w')
+		cached_data.write(json.dumps(CACHE_DICTION))
+		cached_data.close()
+		return CACHE_DICTION['umsi_directory_data']
 
 
 
@@ -92,10 +102,17 @@ def get_umsi_data():
 ## whose keys are UMSI people's names, and whose associated values are those people's 
 #titles, e.g. "PhD student" or "Associate Professor of Information"...
 
-
-
-
-
+umsi_titles = {}
+for words in get_umsi_data():
+	soup = BeautifulSoup(words,"html.parser")
+	people = soup.find_all("div",{"class":"views-row"})
+	for names in people:
+		name_list = soup.find_all("div",{"class":"field-items-even"})
+	for other in people:
+		x = turtles.find("div",{"property":"dc:title"})
+		x2 = item.find_next_sibling("div")
+		umsi_titles[names] = {x:x2}
+	print (umsi_titles)
 
 
 ## PART 3 (a) - Define a function get_five_tweets
@@ -105,8 +122,23 @@ def get_umsi_data():
 ## RETURN VALUE: A list of strings: A list of just the text of 5 different tweets that 
 #result from the search.
 
+def get_five_tweets(astring):
+	unique_identifier = 'twitter_University of Michigan'
+	if astring in CACHE_DICTION[unique_identifier]:
+		twitter_results = CACHE_DICTION[unique_identifier][astring]
 
+	else:
+		twitter_results = api.search(q=astring)
+		CACHE_DICTION[unique_identifier] = {}
+		CACHE_DICTION[unique_identifier][astring] = twitter_results
+		twit_file = open('206project2_caching.json', 'w')
+		twit_file.write(json.dumos(CACHE_DICTION))
+		twit_file.close()
 
+		new_tweets = []
+		for tweet in twitter_results['statuses']:
+			new_tweets.append(tweet['text'])
+		return new_tweets[:5]
 
 ## PART 3 (b) - Write one line of code to invoke the get_five_tweets function with the 
 #phrase "University of Michigan" and save the result in a variable five_tweets.
@@ -117,7 +149,11 @@ def get_umsi_data():
 ## PART 3 (c) - Iterate over the five_tweets list, invoke the find_urls function that 
 #you defined in Part 1 on each element of the list, and accumulate a new list of each 
 #of the total URLs in all five of those tweets in a variable called tweet_urls_found. 
-
+#tweet_urls_found = []
+#for tweet in five_tweets:
+#	for urls in find_urls(tweet):
+#		tweet_urls_found.append(urls)
+#tweet_urls_found = tuple(tweet_urls_found)
 
 
 

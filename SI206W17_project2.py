@@ -6,7 +6,8 @@
 
 ## Below we have provided import statements, comments to separate out the parts of the project, 
 #instructions/hints/examples, and at the end, tests. See the PDF of instructions for more detail. 
-## You can check out the SAMPLE206project2_caching.json for an example of what your cache file might look like.
+## You can check out the SAMPLE206project2_caching.json for an example of what your cache 
+# file might look like.
 
 ###########
 
@@ -34,8 +35,14 @@ api = tweepy.API(auth, parser=tweepy.parsers.JSONParser())
 ## Part 0 -- CACHING SETUP
 
 ## Write the code to begin your caching pattern setup here.
-
-
+CACHE_FNAME = "206project2_caching.json"
+try:
+	cache_file = open(CACHE_FNAME,'r')
+	cache_contents = cache_file.read()
+	CACHE_DICTION = json.loads(cache_contents)
+	cache_file.close()
+except:
+	CACHE_DICTION = {}
 
 
 ## PART 1 - Define a function find_urls.
@@ -47,6 +54,12 @@ api = tweepy.API(auth, parser=tweepy.parsers.JSONParser())
 ## find_urls("I love looking at websites like http://etsy.com and http://instagram.com and stuff") 
 #should return ["http://etsy.com","http://instagram.com"]
 ## find_urls("the internet is awesome #worldwideweb") should return [], empty list
+def find_urls(astring):
+	mylist = []
+	for str in astring:
+		if str not in mylist:
+			mylist.append(words)
+			return mylist
 
 
 
